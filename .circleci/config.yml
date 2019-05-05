@@ -64,6 +64,8 @@ workflows:
             tags:
               only: /.*/
       - build:
+          requires:
+            - test
           filters:
             tags:
               only: /.*/
