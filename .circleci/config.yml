@@ -19,12 +19,13 @@ jobs:
       - checkout
       - setup_remote_docker:
           version: 18.06.0-ce
-      - run: |
-          python3 -m venv venv
-          . venv/bin/activate
-          pip install -r requirements.txt
-          # disable due to https://github.com/squaremo/kubeyaml/issues/8
-          make test
+      - run:
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt
+            # disable due to https://github.com/squaremo/kubeyaml/issues/8
+            make test
   build:
     executor: python
     steps:
@@ -33,7 +34,7 @@ jobs:
           version: 18.06.0-ce
       - run: docker run --privileged linuxkit/binfmt:v0.6
       - attach_workspace:
-         at: .
+          at: .
       - run: make
         #- deploy:
         #  name: Maybe push master image
@@ -61,8 +62,10 @@ workflows:
       - test:
           filters:
             tags:
-              only: /[0-9]+(\.[0-9]+)*(-[a-z]+)?/
+              only: /.*/
       - build:
           filters:
             tags:
-              only: /[0-9]+(\.[0-9]+)*(-[a-z]+)?/
+              only: /.*/
+# for releases
+#              only: /[0-9]+(\.[0-9]+)*(-[a-z]+)?/
