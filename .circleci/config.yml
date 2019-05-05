@@ -23,7 +23,7 @@ jobs:
           python3 -m venv venv
           . venv/bin/activate
           pip install -r requirements.txt
-      # disable due to https://github.com/squaremo/kubeyaml/issues/8
+          # disable due to https://github.com/squaremo/kubeyaml/issues/8
           make test
   build:
     executor: python
