@@ -28,7 +28,7 @@ jobs:
       - deploy:
           name: Maybe push master image
           command: |
-            if [ -z "${CIRCLE_TAG}" -a "${CIRCLE_BRANCH}" == "master" ]; then
+            if [ -z "${CIRCLE_TAG}" -a "${CIRCLE_BRANCH}" == "multiarch" ]; then
               docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" quay.io
               docker tag "quay.io/brezerk/kubeyaml" \
                          "quay.io/brezerk/kubeyaml:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
