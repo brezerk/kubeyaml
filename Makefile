@@ -11,7 +11,7 @@ clean:
 .uptodate.kubeyaml: Dockerfile kubeyaml.py requirements.txt
 	mkdir -p build
 	cp $^ build/
-	docker build -t quay.io/brezerk/brezblock/kubeyaml ./build/
+	docker build -t quay.io/brezerk/kubeyaml ./build/
 	touch $@
 
 test:
