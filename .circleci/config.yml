@@ -1,6 +1,7 @@
-version: 2
-jobs:
-  build:
+version: 2.1
+
+executors:
+  python:
     docker:
       # specify the version you desire here
       # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
@@ -11,43 +12,56 @@ jobs:
       # documented at https://circleci.com/docs/2.0/circleci-images/
       # - image: six8/pyinstaller-alpine:alpine-v3.4-pyinstaller-develop
 
-    working_directory: ~/repo
-
+jobs:
+  test:
+    executor: python
     steps:
       - checkout
       - setup_remote_docker
+          version: 18.06.0-ce
       - run: |
           python3 -m venv venv
           . venv/bin/activate
           pip install -r requirements.txt
       # disable due to https://github.com/squaremo/kubeyaml/issues/8
-      #    make test
-
+          make test
+  build:
+    executor: python
+    steps:
+      - checkout
+      - setup_remote_docker
+          version: 18.06.0-ce
+      - run: docker run --privileged linuxkit/binfmt:v0.6
+      - attach_workspace:
+         at: .
       - run: make
+        #- deploy:
+        #  name: Maybe push master image
+        #  command: |
+        #    if [ -z "${CIRCLE_TAG}" -a "${CIRCLE_BRANCH}" == "multiarch" ]; then
+        #      docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" quay.io
+        #      docker tag "quay.io/brezerk/kubeyaml" \
+        #                 "quay.io/brezerk/kubeyaml:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
+        #      docker push "quay.io/brezerk/kubeyaml:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
+        #    fi
 
-      - deploy:
-          name: Maybe push master image
-          command: |
-            if [ -z "${CIRCLE_TAG}" -a "${CIRCLE_BRANCH}" == "multiarch" ]; then
-              docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" quay.io
-              docker tag "quay.io/brezerk/kubeyaml" \
-                         "quay.io/brezerk/kubeyaml:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
-              docker push "quay.io/brezerk/kubeyaml:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
-            fi
-
-      - deploy:
-          name: Maybe push release image
-          command: |
-            if echo "${CIRCLE_TAG}" | grep -Eq "^[0-9]+(\.[0-9]+)*(-[a-z]+)?$"; then
-              docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" quay.io
-              docker tag quay.io/brezerk/kubeyaml "quay.io/brezerk/kubeyaml:${CIRCLE_TAG}"
-              docker push "quay.io/brezerk/kubeyaml:${CIRCLE_TAG}"
-            fi
+        #- deploy:
+        #  name: Maybe push release image
+        #  command: |
+        #    if echo "${CIRCLE_TAG}" | grep -Eq "^[0-9]+(\.[0-9]+)*(-[a-z]+)?$"; then
+        #      docker login -u "$DOCKER_REGISTRY_USER" -p "$DOCKER_REGISTRY_PASSWORD" quay.io
+        #      docker tag quay.io/brezerk/kubeyaml "quay.io/brezerk/kubeyaml:${CIRCLE_TAG}"
+        #      docker push "quay.io/brezerk/kubeyaml:${CIRCLE_TAG}"
+        #    fi
 
 workflows:
   version: 2
-  build-and-push:
+  kubeyaml:
     jobs:
+      - test:
+          filters:
+            tags:
+              only: /[0-9]+(\.[0-9]+)*(-[a-z]+)?/
       - build:
           filters:
             tags:
